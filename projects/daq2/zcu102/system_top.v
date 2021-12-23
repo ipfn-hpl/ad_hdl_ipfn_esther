@@ -35,7 +35,10 @@
 
 `timescale 1ns/100ps
 
-module system_top (
+module system_top #(
+    parameter RX_JESD_L = 4,
+    parameter TX_JESD_L = 4    
+  ) (
 
   input   [12:0]  gpio_bd_i,
   output  [ 7:0]  gpio_bd_o,
@@ -46,8 +49,8 @@ module system_top (
   input           rx_sysref_n,
   output          rx_sync_p,
   output          rx_sync_n,
-  input   [ 3:0]  rx_data_p,
-  input   [ 3:0]  rx_data_n,
+  input  [RX_JESD_L-1:0]  rx_data_p,
+  input  [RX_JESD_L-1:0]  rx_data_n,
 
   input           tx_ref_clk_p,
   input           tx_ref_clk_n,
@@ -55,8 +58,8 @@ module system_top (
   input           tx_sysref_n,
   input           tx_sync_p,
   input           tx_sync_n,
-  output  [ 3:0]  tx_data_p,
-  output  [ 3:0]  tx_data_n,
+  output  [TX_JESD_L-1:0] tx_data_p,
+  output  [TX_JESD_L-1:0] tx_data_n,
 
   input           trig_p,
   input           trig_n,
@@ -92,6 +95,10 @@ module system_top (
   wire            tx_ref_clk;
   wire            tx_sysref;
   wire            tx_sync;
+  wire    [3:0]   rx_data_p_loc;
+  wire    [3:0]   rx_data_n_loc;
+  wire    [3:0]   tx_data_p_loc;
+  wire    [3:0]   tx_data_n_loc;
 
   // spi
 
@@ -169,14 +176,14 @@ module system_top (
     .gpio_i (gpio_i),
     .gpio_o (gpio_o),
     .gpio_t (),
-    .rx_data_0_n (rx_data_n[0]),
-    .rx_data_0_p (rx_data_p[0]),
-    .rx_data_1_n (rx_data_n[1]),
-    .rx_data_1_p (rx_data_p[1]),
-    .rx_data_2_n (rx_data_n[2]),
-    .rx_data_2_p (rx_data_p[2]),
-    .rx_data_3_n (rx_data_n[3]),
-    .rx_data_3_p (rx_data_p[3]),
+    .rx_data_0_n (rx_data_n_loc[0]),
+    .rx_data_0_p (rx_data_p_loc[0]),
+    .rx_data_1_n (rx_data_n_loc[1]),
+    .rx_data_1_p (rx_data_p_loc[1]),
+    .rx_data_2_n (rx_data_n_loc[2]),
+    .rx_data_2_p (rx_data_p_loc[2]),
+    .rx_data_3_n (rx_data_n_loc[3]),
+    .rx_data_3_p (rx_data_p_loc[3]),
     .rx_ref_clk_0 (rx_ref_clk),
     .rx_sync_0 (rx_sync),
     .rx_sysref_0 (rx_sysref),
@@ -188,17 +195,23 @@ module system_top (
     .spi1_miso (1'd0),
     .spi1_mosi (),
     .spi1_sclk (),
-    .tx_data_0_n (tx_data_n[0]),
-    .tx_data_0_p (tx_data_p[0]),
-    .tx_data_1_n (tx_data_n[1]),
-    .tx_data_1_p (tx_data_p[1]),
-    .tx_data_2_n (tx_data_n[2]),
-    .tx_data_2_p (tx_data_p[2]),
-    .tx_data_3_n (tx_data_n[3]),
-    .tx_data_3_p (tx_data_p[3]),
+    .tx_data_0_n (tx_data_n_loc[0]),
+    .tx_data_0_p (tx_data_p_loc[0]),
+    .tx_data_1_n (tx_data_n_loc[1]),
+    .tx_data_1_p (tx_data_p_loc[1]),
+    .tx_data_2_n (tx_data_n_loc[2]),
+    .tx_data_2_p (tx_data_p_loc[2]),
+    .tx_data_3_n (tx_data_n_loc[3]),
+    .tx_data_3_p (tx_data_p_loc[3]),
     .tx_ref_clk_0 (tx_ref_clk),
     .tx_sync_0 (tx_sync),
     .tx_sysref_0 (tx_sysref));
+
+  assign rx_data_p_loc[RX_JESD_L-1:0] = rx_data_p[RX_JESD_L-1:0];
+  assign rx_data_n_loc[RX_JESD_L-1:0] = rx_data_n[RX_JESD_L-1:0];
+
+  assign tx_data_p[TX_JESD_L-1:0] = tx_data_p_loc[TX_JESD_L-1:0];
+  assign tx_data_n[TX_JESD_L-1:0] = tx_data_n_loc[TX_JESD_L-1:0];
 
 endmodule
 

@@ -1,21 +1,28 @@
+#
+# Parameter description:
+#   [RX/TX]_JESD_M : Number of converters per link
+#   [RX/TX]_JESD_L : Number of lanes per link
+#   [RX/TX]_JESD_S : Number of samples per frame
+#   [RX/TX]_JESD_NP : Number of bits per sample
+#
 
 source $ad_hdl_dir/library/jesd204/scripts/jesd204.tcl
 source $ad_hdl_dir/projects/common/xilinx/data_offload_bd.tcl
 
 # JESD204B interface configurations
 
-set TX_NUM_OF_LANES 4           ; # L
-set TX_NUM_OF_CONVERTERS 2      ; # M
-set TX_SAMPLES_PER_FRAME 1      ; # S
-set TX_SAMPLE_WIDTH 16          ; # N/NP
+set TX_NUM_OF_LANES $ad_project_params(TX_JESD_L)           ; # L
+set TX_NUM_OF_CONVERTERS $ad_project_params(TX_JESD_M)      ; # M
+set TX_SAMPLES_PER_FRAME $ad_project_params(TX_JESD_S)      ; # S
+set TX_SAMPLE_WIDTH $ad_project_params(TX_JESD_NP)          ; # N/NP
 set TX_SAMPLES_PER_CHANNEL [expr $TX_NUM_OF_LANES * 32 / ($TX_NUM_OF_CONVERTERS * $TX_SAMPLE_WIDTH)]
 
 set dac_data_width [expr $TX_SAMPLE_WIDTH * $TX_NUM_OF_CONVERTERS * $TX_SAMPLES_PER_CHANNEL]
 
-set RX_NUM_OF_LANES 4           ; # L
-set RX_NUM_OF_CONVERTERS 2      ; # M
-set RX_SAMPLES_PER_FRAME 1      ; # S
-set RX_SAMPLE_WIDTH 16          ; # N/NP
+set RX_NUM_OF_LANES $ad_project_params(RX_JESD_L)           ; # L
+set RX_NUM_OF_CONVERTERS $ad_project_params(RX_JESD_M)      ; # M
+set RX_SAMPLES_PER_FRAME $ad_project_params(RX_JESD_S)      ; # S
+set RX_SAMPLE_WIDTH $ad_project_params(RX_JESD_NP)          ; # N/NP
 set RX_SAMPLES_PER_CHANNEL [expr $RX_NUM_OF_LANES * 32 / ($RX_NUM_OF_CONVERTERS * $RX_SAMPLE_WIDTH)]
 
 set adc_data_width [expr $RX_SAMPLE_WIDTH * $RX_NUM_OF_CONVERTERS * $RX_SAMPLES_PER_CHANNEL]
@@ -36,9 +43,9 @@ adi_tpl_jesd204_tx_create axi_ad9144_tpl $TX_NUM_OF_LANES \
                                          $TX_SAMPLE_WIDTH \
 
 ad_ip_instance util_upack2 axi_ad9144_upack [list \
-  NUM_OF_CHANNELS 2 \
-  SAMPLES_PER_CHANNEL 4 \
-  SAMPLE_DATA_WIDTH 16 \
+  NUM_OF_CHANNELS $TX_NUM_OF_CONVERTERS \
+  SAMPLES_PER_CHANNEL $TX_SAMPLES_PER_CHANNEL \
+  SAMPLE_DATA_WIDTH $TX_SAMPLE_WIDTH \
 ]
 
 ad_ip_instance axi_dmac axi_ad9144_dma [list \
@@ -235,3 +242,14 @@ ad_cpu_interrupt ps-11 mb-14 axi_ad9680_jesd/irq
 ad_cpu_interrupt ps-12 mb-13 axi_ad9144_dma/irq
 ad_cpu_interrupt ps-13 mb-12 axi_ad9680_dma/irq
 
+# Create dummy outputs for unused Rx lanes
+for {set i $RX_NUM_OF_LANES} {$i < 4} {incr i} {
+    create_bd_port -dir I rx_data_${i}_n
+    create_bd_port -dir I rx_data_${i}_p
+} 
+
+# Create dummy outputs for unused Tx lanes
+for {set i $TX_NUM_OF_LANES} {$i < 4} {incr i} {
+    create_bd_port -dir I tx_data_${i}_n
+    create_bd_port -dir I tx_data_${i}_p
+} 

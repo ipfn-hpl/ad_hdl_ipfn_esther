@@ -35,7 +35,10 @@
 
 `timescale 1ns/100ps
 
-module system_top (
+module system_top #(
+    parameter RX_JESD_L = 4,
+    parameter TX_JESD_L = 4    
+  ) (
 
   inout       [14:0]      ddr_addr,
   inout       [ 2:0]      ddr_ba,
@@ -99,8 +102,8 @@ module system_top (
   input                   rx_sysref_n,
   output                  rx_sync_p,
   output                  rx_sync_n,
-  input       [ 3:0]      rx_data_p,
-  input       [ 3:0]      rx_data_n,
+  input  [RX_JESD_L-1:0]  rx_data_p,
+  input  [RX_JESD_L-1:0]  rx_data_n,
 
   input                   tx_ref_clk_p,
   input                   tx_ref_clk_n,
@@ -108,8 +111,8 @@ module system_top (
   input                   tx_sysref_n,
   input                   tx_sync_p,
   input                   tx_sync_n,
-  output      [ 3:0]      tx_data_p,
-  output      [ 3:0]      tx_data_n,
+  output  [TX_JESD_L-1:0] tx_data_p,
+  output  [TX_JESD_L-1:0] tx_data_n,
 
   input                   trig_p,
   input                   trig_n,
@@ -151,6 +154,10 @@ module system_top (
   wire            tx_ref_clk;
   wire            tx_sysref;
   wire            tx_sync;
+  wire    [3:0]   rx_data_p_loc;
+  wire    [3:0]   rx_data_n_loc;
+  wire    [3:0]   tx_data_p_loc;
+  wire    [3:0]   tx_data_n_loc;
 
   // spi
 
@@ -284,14 +291,14 @@ module system_top (
     .hdmi_vsync (hdmi_vsync),
     .iic_main_scl_io (iic_scl),
     .iic_main_sda_io (iic_sda),
-    .rx_data_0_n (rx_data_n[0]),
-    .rx_data_0_p (rx_data_p[0]),
-    .rx_data_1_n (rx_data_n[1]),
-    .rx_data_1_p (rx_data_p[1]),
-    .rx_data_2_n (rx_data_n[2]),
-    .rx_data_2_p (rx_data_p[2]),
-    .rx_data_3_n (rx_data_n[3]),
-    .rx_data_3_p (rx_data_p[3]),
+    .rx_data_0_n (rx_data_n_loc[0]),
+    .rx_data_0_p (rx_data_p_loc[0]),
+    .rx_data_1_n (rx_data_n_loc[1]),
+    .rx_data_1_p (rx_data_p_loc[1]),
+    .rx_data_2_n (rx_data_n_loc[2]),
+    .rx_data_2_p (rx_data_p_loc[2]),
+    .rx_data_3_n (rx_data_n_loc[3]),
+    .rx_data_3_p (rx_data_p_loc[3]),
     .rx_ref_clk_0 (rx_ref_clk),
     .rx_sync_0 (rx_sync),
     .rx_sysref_0 (rx_sysref),
@@ -317,17 +324,23 @@ module system_top (
     //.sys_clk_clk_n (sys_clk_n),
     //.sys_clk_clk_p (sys_clk_p),
     //.sys_rst (sys_rst),
-    .tx_data_0_n (tx_data_n[0]),
-    .tx_data_0_p (tx_data_p[0]),
-    .tx_data_1_n (tx_data_n[1]),
-    .tx_data_1_p (tx_data_p[1]),
-    .tx_data_2_n (tx_data_n[2]),
-    .tx_data_2_p (tx_data_p[2]),
-    .tx_data_3_n (tx_data_n[3]),
-    .tx_data_3_p (tx_data_p[3]),
+    .tx_data_0_n (tx_data_n_loc[0]),
+    .tx_data_0_p (tx_data_p_loc[0]),
+    .tx_data_1_n (tx_data_n_loc[1]),
+    .tx_data_1_p (tx_data_p_loc[1]),
+    .tx_data_2_n (tx_data_n_loc[2]),
+    .tx_data_2_p (tx_data_p_loc[2]),
+    .tx_data_3_n (tx_data_n_loc[3]),
+    .tx_data_3_p (tx_data_p_loc[3]),
     .tx_ref_clk_0 (tx_ref_clk),
     .tx_sync_0 (tx_sync),
     .tx_sysref_0 (tx_sysref));
+
+  assign rx_data_p_loc[RX_JESD_L-1:0] = rx_data_p[RX_JESD_L-1:0];
+  assign rx_data_n_loc[RX_JESD_L-1:0] = rx_data_n[RX_JESD_L-1:0];
+
+  assign tx_data_p[TX_JESD_L-1:0] = tx_data_p_loc[TX_JESD_L-1:0];
+  assign tx_data_n[TX_JESD_L-1:0] = tx_data_n_loc[TX_JESD_L-1:0];
 
 endmodule
 
