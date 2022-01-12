@@ -7,7 +7,8 @@
 # See https://github.com/Digilent/digilent-vivado-scripts
 ################################################################################
 set DEBUG_CORE false
-set WRITE_MCS false
+#set WRITE_MCS false
+set REPORTING false
 
 # Set the reference directory to where the script is
 set origin_dir [file dirname [info script]]
@@ -35,22 +36,25 @@ tclapp::install -quiet ultrafast
 set path_rtl ../src/hdl
 set path_ip  ../src/ip
 set path_sdc ../src/constraints
-set path_out ../output
+#set path_build ../build
+#set path_out ../output
+set path_bin ../binaries
 set path_bd  ../fmcjesdadc1_kc705.srcs/sources_1/bd/system
 
 if {$DEBUG_CORE == true} {
-    set path_out ../output_dbg
+    set path_build ../build_dbg
 } else {
-    set path_out ../output
+    set path_build ../build
 }
 
-file mkdir $path_out
+file mkdir $path_build
 ################################################################################
 # setup the project
 ################################################################################
 
 set device "xc7k325tffg900-2"
 set board [lindex [lsearch -all -inline [get_board_parts] *kc705*] end]
+#set board "xilinx.com:kc705:part0:1.6"
 
 ## Create project
 # set project_system_dir ".srcs/sources_1/bd/system"
@@ -87,7 +91,6 @@ read_ip "$path_ip/xdma_8g2/xdma_8g2.xci"
 read_xdc "../system_constr.xdc"
 read_xdc "$ad_hdl_dir/projects/common/kc705/kc705_system_constr.xdc"
 
-#read_xdc "$path_sdc/kc705_sma_constr.xdc"
 read_xdc "$path_sdc/pcie_xdma_kc705_x8g2.xdc"
 
 update_compile_order -fileset sources_1
@@ -106,9 +109,11 @@ auto_detect_xpm
 synth_design -top system_top -flatten_hierarchy none
 #synth_design -top red_pitaya_top -flatten_hierarchy none -bufg 16 -keep_equivalent_registers
 
-write_checkpoint         -force   $path_out/post_synth
-report_timing_summary    -file    $path_out/post_synth_timing_summary.rpt
-report_power             -file    $path_out/post_synth_power.rpt
+write_checkpoint         -force   $path_build/post_synth
+if {$REPORTING == true} {
+    report_timing_summary    -file    $path_build/post_synth_timing_summary.rpt
+    report_power             -file    $path_build/post_synth_power.rpt
+}
 ################################################################################
 ## insert debug core
 ##
@@ -123,8 +128,8 @@ power_opt_design
 place_design
 # place_design -effort_level high
 phys_opt_design
-write_checkpoint         -force   $path_out/post_place
-# report_timing_summary    -file    $path_out/post_place_timing_summary.rpt
+write_checkpoint         -force   $path_build/post_place
+# report_timing_summary    -file    $path_build/post_place_timing_summary.rpt
 
 #####################################################################
 # run router
@@ -135,24 +140,26 @@ write_checkpoint         -force   $path_out/post_place
 
 route_design
 # route_design -effort_level high
-write_checkpoint         -force   $path_out/post_route
-report_timing_summary    -file    $path_out/post_route_timing_summary.rpt
-# report_timing            -file    $path_out/post_route_timing.rpt -sort_by group -max_paths 100 -path_type summary
+write_checkpoint         -force   $path_build/post_route
+report_timing_summary    -file    $path_build/post_route_timing_summary.rpt
+# report_timing            -file    $path_build/post_route_timing.rpt -sort_by group -max_paths 100 -path_type summary
 
-# report_clock_utilization -file    $path_out/clock_util.rpt
-report_utilization       -file    $path_out/post_route_util.rpt
-# report_power             -file    $path_out/post_route_power.rpt
-#report_drc               -file    $path_out/post_imp_drc.rpt
-# report_io                -file    $path_out/post_imp_io.rpt
-#write_verilog            -force   $path_out/bft_impl_netlist.v
-#write_xdc -no_fixed_only -force   $path_out/bft_impl.xdc
-
-if {$DEBUG_CORE == true} {
-    write_debug_probes -force $path_out/${prog_file}.ltx
+# report_clock_utilization -file    $path_build/clock_util.rpt
+report_utilization       -file    $path_build/post_route_util.rpt
+if {$REPORTING == true} {
+    report_power             -file    $path_build/post_route_power.rpt
+    report_drc               -file    $path_build/post_imp_drc.rpt
+    report_io                -file    $path_build/post_imp_io.rpt
+    write_verilog            -force   $path_build/bft_impl_netlist.v
+    write_xdc -no_fixed_only -force   $path_build/bft_impl.xdc
 }
 
-# xilinx::ultrafast::report_io_reg -verbose -file $path_out/post_route_iob.rpt
-write_bitstream -force        $path_out/${prog_file}.bit
+if {$DEBUG_CORE == true} {
+    write_debug_probes -force $path_build/${prog_file}.ltx
+}
+
+# xilinx::ultrafast::report_io_reg -verbose -file $path_build/post_route_iob.rpt
+write_bitstream -force        $path_bin/${prog_file}.bit
 
 close_project
 

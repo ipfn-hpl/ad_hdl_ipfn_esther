@@ -5,6 +5,8 @@ set path_ip [file dirname [info script]]
 set part xc7k325tffg900-2
 ## Create project
 create_project -in_memory -part $part
+set board [lindex [lsearch -all -inline [get_board_parts] *kc705*] end]
+set_property board_part $board [current_project]
 
 set ip_name xdma_8g2
 # Just in case
