@@ -3,7 +3,7 @@
 #xsct  upload_fw.tcl
 #
 connect
-fpga -f ./system_top.bit
+fpga -f ../binaries/system_top.bit
 #fpga -f ../output/system_top.bit
 after 1000
 # Linux buildroot 4.9.0 #4 Fri Jun 21 12:29:50 WEST 2019 microblaze GNU/Linux
@@ -11,7 +11,7 @@ after 1000
 #
 #4* MicroBlaze #0 (Running)
 target 4
-dow ./simpleImage.kc705_fmcjesdadc1
+dow ../binaries/simpleImage.kc705_fmcjesdadc1
 after 1000
 con
 disconnect
